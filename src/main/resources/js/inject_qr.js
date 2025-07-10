@@ -1,0 +1,12 @@
+(async () => {
+    const registrationInfo = await window.AuthStore.RegistrationUtils.waSignalStore.getRegistrationInfo();
+    const noiseKeyPair = await window.AuthStore.RegistrationUtils.waNoiseInfo.get();
+    const staticKeyB64 = window.AuthStore.Base64Tools.encodeB64(noiseKeyPair.staticKeyPair.pubKey);
+    const identityKeyB64 = window.AuthStore.Base64Tools.encodeB64(registrationInfo.identityKeyPair.pubKey);
+    const advSecretKey = await window.AuthStore.RegistrationUtils.getADVSecretKey();
+    const platform = window.AuthStore.RegistrationUtils.DEVICE_PLATFORM;
+    const getQR = (ref) => ref + ',' + staticKeyB64 + ',' + identityKeyB64 + ',' + advSecretKey + ',' + platform;
+
+    window.onQRChangedEvent(getQR(window.AuthStore.Conn.ref)); // initial qr
+    window.AuthStore.Conn.on('change:ref', (_, ref) => { window.onQRChangedEvent(getQR(ref)); }); // future QR changes
+})();
