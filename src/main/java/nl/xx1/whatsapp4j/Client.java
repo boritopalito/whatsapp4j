@@ -1,12 +1,11 @@
 package nl.xx1.whatsapp4j;
 
-import com.microsoft.playwright.Browser;
-import com.microsoft.playwright.BrowserType;
-import com.microsoft.playwright.Page;
-import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.LoadState;
+import nl.xx1.whatsapp4j.auth.NoAuth;
 import nl.xx1.whatsapp4j.utils.JsUtils;
 
+import java.nio.file.Path;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +22,22 @@ public class Client {
     private final CountDownLatch closeLatch = new CountDownLatch(1);
 
     private Browser browser;
+    private BrowserContext browserContext;
     private Page page;
+
+    private final ClientLaunchOptions options;
+
+    public Client() {
+        this(ClientLaunchOptions.builder().build());
+    }
+
+    public Client(ClientLaunchOptions options) {
+        this.options = options;
+    }
+
+    public BrowserContext getBrowserContext() {
+        return browserContext;
+    }
 
     public <T> void on(Event event, ClientEventListener<T> listener) {
         listeners.computeIfAbsent(event, k -> new CopyOnWriteArrayList<>()).add(listener);
@@ -48,8 +62,18 @@ public class Client {
     }
 
     public void start() {
-        browser = Playwright.create().chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
-        page = browser.newPage(new Browser.NewPageOptions().setBypassCSP(true));
+        if (options.authStrategy() instanceof NoAuth) {
+            browser = Playwright.create().chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
+            browserContext = browser.newContext();
+        } else {
+            Path userDataDir = options.authStrategy().beforeBrowser();
+            browser = Playwright.create().chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
+            browserContext = browser.newContext(
+                    new Browser.NewContextOptions().setStorageStatePath(userDataDir)
+            );
+        }
+
+        page = browserContext.newPage();
 
         page.navigate(WHATSAPP_URL);
         page.waitForLoadState(LoadState.LOAD);
@@ -76,6 +100,21 @@ public class Client {
 
             this.page.evaluate(JsUtils.loadJsFromResources("js/inject_qr.js"));
         }
+
+        exposeFunctionIfAbsent(page, "onAppStateHasSyncedEvent", arg -> {
+
+            boolean injected = (boolean) page.evaluate("() => typeof window.Store !== 'undefined' && typeof window.WWebJS !== 'undefined'");
+
+            if (!injected) {
+                this.page.waitForFunction("window.AuthStore != undefined");
+            }
+
+            this.options.authStrategy().onSuccessfulLogin();
+            this.fireEvent(Event.READY, null);
+            return null;
+        });
+
+        this.page.evaluate("window.AuthStore.AppState.on('change:hasSynced', () => { window.onAppStateHasSyncedEvent(); });");
     }
 
     private boolean isAuthenticated() {
