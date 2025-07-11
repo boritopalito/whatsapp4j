@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 
 import static nl.xx1.whatsapp4j.utils.ExposeFunctionUtil.exposeFunctionIfAbsent;
 
@@ -19,6 +20,7 @@ public class Client {
     private static final String WHATSAPP_URL = "https://web.whatsapp.com/";
 
     private final Map<Event, List<ClientEventListener<?>>> listeners = new EnumMap<>(Event.class);
+    private final CountDownLatch closeLatch = new CountDownLatch(1);
 
     private Browser browser;
     private Page page;
@@ -47,20 +49,26 @@ public class Client {
 
     public void start() {
         browser = Playwright.create().chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
-        page = browser.newPage();
+        page = browser.newPage(new Browser.NewPageOptions().setBypassCSP(true));
 
         page.navigate(WHATSAPP_URL);
         page.waitForLoadState(LoadState.LOAD);
 
         this.inject();
+
+        this.page.onFrameNavigated(frame -> {
+            this.inject();
+        });
+
+        while (true) {
+            this.page.waitForTimeout(1);
+        }
     }
 
     private void inject() {
         this.page.evaluate(JsUtils.loadJsFromResources("js/auth_store.js"));
 
-        boolean needAuthentication = (boolean) page.evaluate(JsUtils.loadJsFromResources("js/auth_status.js"));
-
-        if (needAuthentication) {
+        if (!isAuthenticated()) {
             exposeFunctionIfAbsent(page, "onQRChangedEvent", arg -> {
                 fireEvent(Event.QR_READY, arg);
                 return "result";
@@ -68,5 +76,24 @@ public class Client {
 
             this.page.evaluate(JsUtils.loadJsFromResources("js/inject_qr.js"));
         }
+    }
+
+    private boolean isAuthenticated() {
+        AppState appState = getAppState();
+
+        while (AppState.getOpeningStates().contains(appState)) {
+            appState = getAppState();
+        }
+
+        return !AppState.getUnpairedStates().contains(appState);
+    }
+
+    public AppState getAppState() {
+        String appState = (String) this.page.evaluate("window.AuthStore.AppState.state");
+        return AppState.valueOf(appState);
+    }
+
+    public void waitForClose() throws InterruptedException {
+        closeLatch.await();
     }
 }

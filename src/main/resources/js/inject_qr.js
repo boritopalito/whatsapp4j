@@ -7,6 +7,11 @@
     const platform = window.AuthStore.RegistrationUtils.DEVICE_PLATFORM;
     const getQR = (ref) => ref + ',' + staticKeyB64 + ',' + identityKeyB64 + ',' + advSecretKey + ',' + platform;
 
-    window.onQRChangedEvent(getQR(window.AuthStore.Conn.ref)); // initial qr
-    window.AuthStore.Conn.on('change:ref', (_, ref) => { window.onQRChangedEvent(getQR(ref)); }); // future QR changes
+    window.onQRChangedEvent(getQR(window.AuthStore.Conn.ref));
+    window.AuthStore.Conn.on('change:ref', (_, ref) => {
+        console.log('QR refresh triggered.')
+        window.onQRChangedEvent(getQR(ref));
+    });
+
+    console.log('Injected QR-code JS.');
 })();
