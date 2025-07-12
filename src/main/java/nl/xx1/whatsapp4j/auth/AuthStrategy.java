@@ -14,5 +14,7 @@ public abstract class AuthStrategy {
 
     public abstract Path beforeBrowser();
 
+    public abstract void afterBrowser();
+
     public abstract void onSuccessfulLogin();
 }

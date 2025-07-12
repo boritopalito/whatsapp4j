@@ -1,44 +1,36 @@
 package nl.xx1.whatsapp4j.auth;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.microsoft.playwright.BrowserContext;
-import com.microsoft.playwright.options.Cookie;
 
 import java.io.IOException;
-import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 
 public class LocalAuth extends AuthStrategy {
 
     @Override
     public Path beforeBrowser() {
-
-        if (!Files.exists(Path.of("session.json"))) {
+        if (!Files.exists(Path.of("storage.json"))) {
             try {
-                Files.createFile(Path.of("session.json"));
+                Files.createFile(Path.of("storage.json"));
             } catch (IOException e) {
-                throw new RuntimeException(e);
+//                throw new RuntimeException(e);
             }
         }
 
-        return Path.of("session.json");
+        return Path.of("storage.json");
+    }
+
+    @Override
+    public void afterBrowser() {
+
     }
 
     @Override
     public void onSuccessfulLogin() {
-        BrowserContext context = this.client.getBrowserContext();
-        List<Cookie> cookies = context.cookies();
-
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        try (Writer writer = Files.newBufferedWriter(Paths.get("cookies.json"))) {
-            gson.toJson(cookies, writer);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        System.out.println("Saving login.");
+        this.client.getBrowserContext().storageState(new BrowserContext.StorageStateOptions().setPath(Paths.get("storage.json")));
     }
 
 }

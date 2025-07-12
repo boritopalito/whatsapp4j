@@ -62,6 +62,8 @@ public class Client {
     }
 
     public void start() {
+        options.authStrategy().setup(this);
+
         if (options.authStrategy() instanceof NoAuth) {
             browser = Playwright.create().chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
             browserContext = browser.newContext();
@@ -78,11 +80,11 @@ public class Client {
         page.navigate(WHATSAPP_URL);
         page.waitForLoadState(LoadState.LOAD);
 
-        this.inject();
-
         this.page.onFrameNavigated(frame -> {
             this.inject();
         });
+
+        this.inject();
 
         while (true) {
             this.page.waitForTimeout(1);
@@ -91,6 +93,8 @@ public class Client {
 
     private void inject() {
         this.page.evaluate(JsUtils.loadJsFromResources("js/auth_store.js"));
+
+        this.page.waitForFunction("window.AuthStore != undefined");
 
         if (!isAuthenticated()) {
             exposeFunctionIfAbsent(page, "onQRChangedEvent", arg -> {
@@ -101,7 +105,23 @@ public class Client {
             this.page.evaluate(JsUtils.loadJsFromResources("js/inject_qr.js"));
         }
 
+//        page.exposeFunction("onAppStateHasSyncedEvent", (c) -> {
+//            System.out.println("On app state fired.");
+//
+//            boolean injected = (boolean) page.evaluate("() => typeof window.Store !== 'undefined' && typeof window.WWebJS !== 'undefined'");
+//
+//            if (!injected) {
+//                this.page.waitForFunction("window.AuthStore != undefined");
+//            }
+//
+//            this.options.authStrategy().onSuccessfulLogin();
+//            this.fireEvent(Event.READY, null);
+//            return "result";
+//        });
+//
         exposeFunctionIfAbsent(page, "onAppStateHasSyncedEvent", arg -> {
+
+            System.out.println("On app state fired.");
 
             boolean injected = (boolean) page.evaluate("() => typeof window.Store !== 'undefined' && typeof window.WWebJS !== 'undefined'");
 
@@ -111,10 +131,17 @@ public class Client {
 
             this.options.authStrategy().onSuccessfulLogin();
             this.fireEvent(Event.READY, null);
-            return null;
+            return "result";
         });
 
-        this.page.evaluate("window.AuthStore.AppState.on('change:hasSynced', () => { window.onAppStateHasSyncedEvent(); });");
+        this.page.evaluate("""
+           () => {
+               window.AuthStore.AppState.on('change:hasSynced', () => {
+                    console.log("change:hasSynced tiggered");
+                    window.onAppStateHasSyncedEvent(1);
+                });
+           }
+        """);
     }
 
     private boolean isAuthenticated() {
@@ -128,8 +155,12 @@ public class Client {
     }
 
     public AppState getAppState() {
-        String appState = (String) this.page.evaluate("window.AuthStore.AppState.state");
-        return AppState.valueOf(appState);
+        try {
+            String appState = (String) this.page.evaluate("window.AuthStore.AppState.state");
+            return AppState.valueOf(appState);
+        } catch (PlaywrightException e) {
+            return AppState.UNLAUNCHED;
+        }
     }
 
     public void waitForClose() throws InterruptedException {
