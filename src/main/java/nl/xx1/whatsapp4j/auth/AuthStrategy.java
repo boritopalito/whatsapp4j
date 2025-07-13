@@ -1,8 +1,7 @@
 package nl.xx1.whatsapp4j.auth;
 
-import nl.xx1.whatsapp4j.Client;
-
 import java.nio.file.Path;
+import nl.xx1.whatsapp4j.Client;
 
 public abstract class AuthStrategy {
     protected Client client;

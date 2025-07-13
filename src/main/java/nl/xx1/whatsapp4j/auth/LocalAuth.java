@@ -1,7 +1,5 @@
 package nl.xx1.whatsapp4j.auth;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class LocalAuth extends AuthStrategy {
@@ -16,12 +14,8 @@ public class LocalAuth extends AuthStrategy {
     }
 
     @Override
-    public void afterBrowser() {
-
-    }
+    public void afterBrowser() {}
 
     @Override
-    public void onSuccessfulLogin() {
-    }
-
+    public void onSuccessfulLogin() {}
 }

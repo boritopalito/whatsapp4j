@@ -13,7 +13,8 @@ public class JsUtils {
             if (inputStream == null) {
                 throw new IllegalArgumentException("Resource not found: " + resourcePath);
             }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            try (BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
                 return reader.lines().collect(Collectors.joining("\n"));
             }
         } catch (Exception e) {

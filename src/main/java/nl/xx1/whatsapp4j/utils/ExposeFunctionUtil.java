@@ -2,7 +2,6 @@ package nl.xx1.whatsapp4j.utils;
 
 import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.Page;
-
 import java.util.function.Function;
 
 public class ExposeFunctionUtil {

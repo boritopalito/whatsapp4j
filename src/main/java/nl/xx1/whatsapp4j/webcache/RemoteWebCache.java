@@ -10,7 +10,5 @@ public class RemoteWebCache implements WebCache {
     }
 
     @Override
-    public void persist(String html, String version) {
-
-    }
+    public void persist(String html, String version) {}
 }

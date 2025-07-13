@@ -9,12 +9,8 @@ public class NoAuth extends AuthStrategy {
     }
 
     @Override
-    public void afterBrowser() {
-
-    }
+    public void afterBrowser() {}
 
     @Override
-    public void onSuccessfulLogin() {
-
-    }
+    public void onSuccessfulLogin() {}
 }
