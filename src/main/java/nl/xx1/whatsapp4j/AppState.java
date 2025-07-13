@@ -7,7 +7,8 @@ public enum AppState {
     UNLAUNCHED,
     PAIRING,
     UNPAIRED,
-    UNPAIRED_IDLE;
+    UNPAIRED_IDLE,
+    CONNECTED;
 
     public static List<AppState> getOpeningStates() {
         return List.of(OPENING, PAIRING, UNLAUNCHED);

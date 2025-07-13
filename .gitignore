@@ -36,3 +36,10 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Session related stuff
+
+session
+storage.json
+w4j_cache
+w4j_auth
