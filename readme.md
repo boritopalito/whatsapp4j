@@ -10,6 +10,26 @@ This project aims to provide Java developers with a similar experience and funct
 - Core features for interacting with WhatsApp Web
 - An open and community-driven approach
 
+## Example
+
+```java
+public class Main {
+    public static void main(String[] args) throws InterruptedException {
+        Client client = new Client(ClientLaunchOptions.builder()
+                .authStrategy(new LocalAuth())
+                .build());
+
+        client.on(Event.QR_READY, System.out::println);
+
+        client.on(Event.READY, (obj) -> {
+            System.out.println("Client is ready!");
+        });
+
+        client.start();
+    }
+}
+```
+
 ## Status
 
 **In early development.**
