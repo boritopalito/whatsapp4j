@@ -36,8 +36,8 @@ public class Client {
         this.options = options;
     }
 
-    public BrowserContext getBrowserContext() {
-        return browserContext;
+    public ClientLaunchOptions getOptions() {
+        return this.options;
     }
 
     public <T> void on(Event event, ClientEventListener<T> listener) {
@@ -70,7 +70,7 @@ public class Client {
             browserContext = browser.newContext();
         } else {
             Path userDataDir = options.authStrategy().beforeBrowser();
-            browserContext = Playwright.create().chromium().launchPersistentContext(Path.of("session"), new BrowserType.LaunchPersistentContextOptions().setBypassCSP(true).setHeadless(false));
+            browserContext = Playwright.create().chromium().launchPersistentContext(userDataDir, new BrowserType.LaunchPersistentContextOptions().setBypassCSP(true).setHeadless(false));
         }
 
         page = browserContext.newPage();
@@ -135,9 +135,6 @@ public class Client {
         }
 
         exposeFunctionIfAbsent(page, "onAppStateHasSyncedEvent", arg -> {
-
-            System.out.println("On app state fired.");
-
             if (!this.currentIndexHtml.isEmpty()) {
                 WebCache webCache = WebCacheFactory.create("local");
                 webCache.persist(this.currentIndexHtml, "1.0.0");
