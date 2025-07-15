@@ -1,9 +1,11 @@
 package nl.xx1.whatsapp4j.model;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import java.util.Date;
 
-public record GroupMetaData(@SerializedName("desc") String description, @SerializedName("creation") Long createdAt) {
+public record GroupMetaData(
+        @Expose @SerializedName("desc") String description, @Expose @SerializedName("creation") Long createdAt) {
     public GroupMetaData {
         if (description == null) {
             description = "";

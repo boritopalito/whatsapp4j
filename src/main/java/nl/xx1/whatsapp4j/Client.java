@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
+import lombok.Getter;
 import nl.xx1.whatsapp4j.auth.NoAuth;
 import nl.xx1.whatsapp4j.json.GsonProvider;
 import nl.xx1.whatsapp4j.model.Chat;
@@ -21,13 +21,13 @@ public class Client {
     private static final String WHATSAPP_URL = "https://web.whatsapp.com/";
 
     private final Map<Event, List<ClientEventListener<?>>> listeners = new EnumMap<>(Event.class);
-    private final CountDownLatch closeLatch = new CountDownLatch(1);
 
     private String currentIndexHtml = "";
 
     private BrowserContext browserContext;
     private Page page;
 
+    @Getter
     private final ClientLaunchOptions options;
 
     public Client() {
@@ -36,10 +36,6 @@ public class Client {
 
     public Client(ClientLaunchOptions options) {
         this.options = options;
-    }
-
-    public ClientLaunchOptions getOptions() {
-        return this.options;
     }
 
     public <T> void on(Event event, ClientEventListener<T> listener) {
@@ -150,9 +146,7 @@ public class Client {
 
             if (!injected) {
                 this.page.evaluate(JsUtils.loadJsFromResources("js/store.js"));
-
                 this.page.waitForFunction("window.Store != undefined");
-
                 this.page.evaluate(JsUtils.loadJsFromResources("js/whatsapp4j.js"));
             }
 
@@ -165,7 +159,6 @@ public class Client {
                 """
            () => {
                window.AuthStore.AppState.on('change:hasSynced', () => {
-                    console.log("change:hasSynced tiggered");
                     window.onAppStateHasSyncedEvent(1);
                 });
            }
@@ -191,13 +184,16 @@ public class Client {
         }
     }
 
-    public void waitForClose() throws InterruptedException {
-        closeLatch.await();
-    }
-
     public List<Chat> getChats() {
         String json = (String) this.page.evaluate("async () => JSON.stringify(await window.W4J.getChats())");
         Type chatListType = new TypeToken<List<Chat>>() {}.getType();
-        return GsonProvider.getGson().fromJson(json, chatListType);
+        return GsonProvider.getGson(this).fromJson(json, chatListType);
+    }
+
+    public Optional<Chat> getChatById(String chatId) {
+        String json = (String)
+                this.page.evaluate("async () => JSON.stringify(await window.W4J.getChat('%s'))".formatted(chatId));
+        Type chatType = new TypeToken<Chat>() {}.getType();
+        return Optional.of(GsonProvider.getGson(this).fromJson(json, chatType));
     }
 }

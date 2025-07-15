@@ -9,6 +9,34 @@
         return await Promise.all(chatPromises);
     }
 
+    window.W4J.getChat = async (chatId) => {
+        const isChannel = /@\w*newsletter\b/.test(chatId);
+        let chatWid;
+        try {
+            chatWid = window.Store.WidFactory.createWid(chatId);
+        } catch (Exception) {
+            return null;
+        }
+
+        let chat;
+
+        if (isChannel) {
+            try {
+                chat = window.Store.NewsletterCollection.get(chatId);
+                if (!chat) {
+                    await window.Store.ChannelUtils.loadNewsletterPreviewChat(chatId);
+                    chat = await window.Store.NewsletterCollection.find(chatWid);
+                }
+            } catch (err) {
+                chat = null;
+            }
+        } else {
+            chat = window.Store.Chat.get(chatWid) || (await window.Store.Chat.find(chatWid));
+        }
+
+        return window.W4J.getChatModel(chat);
+    }
+
     window.W4J.getChatModel = async (chat) => {
         const model = chat.serialize();
 
