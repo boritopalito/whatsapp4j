@@ -25,6 +25,10 @@ public class Main {
             System.out.println("Client is ready!");
         });
 
+        client.on(Event.MESSAGE_RECEIVED, (Message message) -> {
+            System.out.println(message);
+        });
+
         client.start();
     }
 }
