@@ -1,6 +1,7 @@
 package nl.xx1.whatsapp4j;
 
 public enum Event {
-    READY,
-    QR_READY
+    MESSAGE_RECEIVED,
+    QR_READY,
+    READY
 }

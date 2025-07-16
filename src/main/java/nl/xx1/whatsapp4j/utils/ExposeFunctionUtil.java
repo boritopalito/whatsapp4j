@@ -5,7 +5,7 @@ import com.microsoft.playwright.Page;
 import java.util.function.Function;
 
 public class ExposeFunctionUtil {
-    public static void exposeFunctionIfAbsent(Page page, String name, Function<Object, Object> fn) {
+    public static <T> void exposeFunctionIfAbsent(Page page, String name, Function<T, Object> fn) {
         BrowserContext context = page.context();
 
         boolean exist = (boolean) page.evaluate("name => !!window[name]", name);
@@ -14,6 +14,6 @@ public class ExposeFunctionUtil {
             return;
         }
 
-        context.exposeBinding(name, (source, args) -> fn.apply(args[0]));
+        context.exposeBinding(name, (source, args) -> fn.apply((T) args[0]));
     }
 }

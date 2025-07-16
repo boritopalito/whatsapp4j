@@ -67,4 +67,29 @@
 
         return model;
     }
+
+    window.W4J.getMessageModel = (message) => {
+        const msg = message.serialize();
+
+        msg.id = message.id._serialized;
+
+        msg.isNewMessage = !!msg.isNewMsg;
+
+        if (msg.buttons) {
+            msg.buttons = msg.buttons.serialize();
+        }
+
+        if (msg.dynamicReplyButtons) {
+            msg.dynamicReplyButtons = JSON.parse(JSON.stringify(msg.dynamicReplyButtons));
+        }
+        if (msg.replyButtons) {
+            msg.replyButtons = JSON.parse(JSON.stringify(msg.replyButtons));
+        }
+
+        delete msg.pendingAckUpdate;
+
+        console.log(msg);
+
+        return JSON.stringify(msg);
+    }
 })

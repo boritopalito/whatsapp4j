@@ -13,6 +13,7 @@ import lombok.Getter;
 import nl.xx1.whatsapp4j.auth.NoAuth;
 import nl.xx1.whatsapp4j.json.GsonProvider;
 import nl.xx1.whatsapp4j.model.Chat;
+import nl.xx1.whatsapp4j.model.Message;
 import nl.xx1.whatsapp4j.utils.JsUtils;
 import nl.xx1.whatsapp4j.webcache.WebCache;
 import nl.xx1.whatsapp4j.webcache.WebCacheFactory;
@@ -148,6 +149,7 @@ public class Client {
                 this.page.evaluate(JsUtils.loadJsFromResources("js/store.js"));
                 this.page.waitForFunction("window.Store != undefined");
                 this.page.evaluate(JsUtils.loadJsFromResources("js/whatsapp4j.js"));
+                this.attachEventListeners();
             }
 
             this.options.authStrategy().onSuccessfulLogin();
@@ -163,6 +165,23 @@ public class Client {
                 });
            }
         """);
+    }
+
+    private void attachEventListeners() {
+        exposeFunctionIfAbsent(this.page, "onAddMessageEvent", (String arg) -> {
+            Type messageType = new TypeToken<Message>() {}.getType();
+            Message message = GsonProvider.getGson(this).fromJson(arg, messageType);
+
+            if (!message.isNewMessage()) {
+                return null;
+            }
+
+            this.fireEvent(Event.MESSAGE_RECEIVED, message);
+
+            return "null";
+        });
+
+        this.page.evaluate(JsUtils.loadJsFromResources("js/listeners.js"));
     }
 
     private boolean isAuthenticated() {
