@@ -14,13 +14,58 @@ import nl.xx1.whatsapp4j.Client;
 public class Message {
 
     @Expose
-    private final String id;
+    private String id;
 
     @Expose
-    private final String body;
+    private int ack;
 
     @Expose
-    private final boolean isNewMessage;
+    private String author;
+
+    @Expose
+    private String body;
+
+    @Expose
+    private boolean broadcast;
+
+    @Expose
+    private String deviceType;
+
+    @Expose
+    private String duration;
+
+    @Expose
+    private int forwardingScore;
+
+    @Expose
+    private String from;
+
+    @Expose
+    private boolean fromMe;
+
+    @Expose
+    private boolean hasMedia;
+
+    @Expose
+    private boolean hasQuotedMsg;
+
+    @Expose
+    private boolean hasReaction;
+
+    @Expose
+    private boolean isEphemeral;
+
+    @Expose
+    private boolean isForwarded;
+
+    @Expose
+    private boolean isGif;
+
+    @Expose
+    private boolean isNewMessage;
+
+    @Expose
+    private MessageType type;
 
     protected final Client client;
 }

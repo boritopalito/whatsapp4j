@@ -73,6 +73,9 @@
 
         msg.id = message.id._serialized;
 
+        msg.isEphemeral = message.isEphemeral;
+        msg.isStatusV3 = message.isStatusV3;
+
         msg.isNewMessage = !!msg.isNewMsg;
 
         if (msg.buttons) {
